@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Analítico</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+
+        :root {
+            --bg-glass: rgba(30, 30, 32, 0.75);
+            --bg-card: rgba(20, 20, 22, 0.6);
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --text-main: #ffffff;
+            --text-muted: #8e8e93;
+            --accent-green: #9acd32;
+            --accent-red: #ff3b30;
+            --card-radius: 20px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.25s ease;
+        }
+
+        body {
+            background: url('https://w.wallhaven.cc/full/5d/wallhaven-5d2gk1.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .dashboard-glass {
+            background: var(--bg-glass);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--border-glass);
+            border-radius: 30px;
+            width: 100%;
+            max-width: 1400px;
+            padding: 2.5rem;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+        }
+
+    
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+        }
+
+        .header-title h1 { font-size: 2rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .header-title p { color: var(--text-muted); font-size: 0.9rem; }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .tabs {
+            display: flex;
+            background: rgba(0,0,0,0.4);
+            border-radius: 20px;
+            padding: 0.3rem;
+        }
+
+        .tab {
+            padding: 0.5rem 1rem;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .tab:hover { color: var(--text-main); }
+        .tab.active {
+            background: rgba(255,255,255,0.15);
+            color: var(--text-main);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .btn-icon {
+            background: rgba(0,0,0,0.4);
+            border: none;
+            color: var(--text-main);
+            height: 40px;
+            padding: 0 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-icon.circle { width: 40px; padding: 0; border-radius: 50%; }
+        
+        .btn-icon:hover { 
+            background: rgba(255,255,255,0.15); 
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .btn-icon:active { transform: translateY(0); }
+
+        .user-balance {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: rgba(0,0,0,0.4);
+            padding: 0.5rem 1.5rem 0.5rem 0.5rem;
+            border-radius: 30px;
+        }
+
+        .user-balance:hover { background: rgba(0,0,0,0.6); }
+
+        .user-balance img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; }
+        .user-balance span { font-weight: 600; font-size: 1.1rem; width: 110px; text-align: right;}
+        
+        #toggle-balance {
+            color: var(--text-muted); 
+            cursor: pointer;
+            padding: 5px;
+        }
+        #toggle-balance:hover { color: var(--text-main); transform: scale(1.2); }
+
+  
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1.8fr 1.2fr 1.2fr;
+            gap: 1.5rem;
+        }
+
+       
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--card-radius);
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            border-color: rgba(255,255,255,0.15);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .card-title { font-size: 1rem; font-weight: 500; }
+
+        .icon-top-right {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            cursor: pointer;
+            padding: 5px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+        }
+        .icon-top-right:hover {
+            color: var(--text-main);
+            background: rgba(255,255,255,0.2);
+            transform: scale(1.1);
+        }
+
+        .col-left { display: flex; flex-direction: column; gap: 1.5rem; }
+        
+        .analytics-labels {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+        .analytics-labels div { cursor: pointer; padding: 5px; border-radius: 8px; }
+        .analytics-labels div:hover { background: rgba(255,255,255,0.05); }
+        .analytics-labels div span { font-weight: 600; color: var(--text-main); font-size: 1rem; display: block; margin-top: 0.3rem;}
+        .label-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+        
+        .chart-container { height: 200px; width: 100%; }
+
+        .mini-cards-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+        .value-large { font-size: 1.8rem; font-weight: 600; margin-top: 0.5rem; }
+        .trend-up { color: var(--accent-green); font-size: 0.8rem; }
+        .trend-down { color: var(--accent-red); font-size: 0.8rem; }
+
+        .bottom-widgets {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1.5rem;
+        }
+        .widget { background: var(--bg-card); border-radius: 15px; padding: 1rem; border: 1px solid var(--border-glass); cursor: pointer; }
+        .widget:hover { transform: translateY(-3px); background: rgba(40,40,45,0.7); box-shadow: 0 5px 15px rgba(0,0,0,0.3);}
+        
+        .widget.add-widget { display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--text-muted); border-style: dashed;}
+        .widget.add-widget:hover { border-color: var(--accent-green); color: var(--accent-green); background: rgba(154, 205, 50, 0.05); }
+
+       
+        .col-middle { display: flex; flex-direction: column; gap: 1.5rem; }
+        .spending-chart-container { height: 250px; width: 100%; margin-top: 2rem;}
+        
+        .savings-progress { margin-top: 1rem; }
+        .progress-header { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.5rem; cursor: pointer; }
+        .progress-header:hover { opacity: 0.8; }
+        .progress-bar-bg { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-bottom: 1.5rem;}
+        .progress-bar-fill { height: 100%; background: var(--accent-green); border-radius: 3px; position: relative;}
+        .progress-bar-fill::after {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transform: translateX(-100%);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer { 100% { transform: translateX(100%); } }
+
+        .col-right { display: flex; flex-direction: column; gap: 1.5rem; }
+        
+        .transaction-list { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem;}
+        .transaction-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-radius: 12px; cursor: pointer;}
+        .transaction-item:hover { background: rgba(255,255,255,0.08); transform: translateX(5px); }
+        .tx-info { display: flex; align-items: center; gap: 1rem; }
+        .tx-icon { width: 35px; height: 35px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.2rem;}
+        .tx-icon.hp { background: #0096D6; color: white;}
+        .tx-icon.amazon { background: #FF9900; color: white;}
+        .tx-icon.dribbble { background: #EA4C89; color: white;}
+        .tx-details h4 { font-size: 0.9rem; font-weight: 500; }
+        .tx-details p { font-size: 0.75rem; color: var(--text-muted); }
+        .tx-amount { font-weight: 600; font-size: 0.95rem; }
+        .tx-amount.positive { color: var(--accent-green); }
+
+        .credit-cards { display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem; }
+        .cc { padding: 1rem 1.5rem; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; background: #2a2a2a; cursor: pointer;}
+        .cc:hover { background: #333; transform: scale(1.02); }
+        
+        .cc-green { background: #8dc63f; color: #1a1a1a; padding: 1.5rem; border-radius: 12px; cursor: pointer;}
+        .cc-green:hover { background: #9acd32; transform: scale(1.03); box-shadow: 0 10px 20px rgba(154, 205, 50, 0.3); }
+        .cc-green .cc-bottom { display: flex; justify-content: space-between; margin-top: 2rem; font-weight: 600;}
+
+
+            .rodape {
+                position: fixed;
+                top: 50%;
+                right: 50%;
+                transform: translateY (-50%);
+                width: 320px;
+                padding: 22px;
+                border-radius: 22px;
+                background: rgba(10, 10, 10, 0.55);
+                backdrop-filter: blur(18px);
+                 -webkit-backdrop-filter: blur(18px);
+                border: 1px solid rgba(255, 255, 255, 0.12);
+
+                 box-shadow:
+        0 8px 32px rgba(0,0,0,0.45),
+        0 0 25px rgba(255,255,255,0.06),
+        inset 0 1px 1px rgba(255,255,255,0.12);
+
+    cursor: grab;
+    user-select: none;
+    z-index: 9999;
+    transition: 
+        transform .25s ease,
+        box-shadow .25s ease;
+            }
+
+
+            .rodape:active {
+    cursor: grabbing;
+    transform: scale(1.02);
+    box-shadow:
+        0 12px 40px rgba(0,0,0,0.55),
+        0 0 35px rgba(255,255,255,0.12);
+}
+
+/* PERFIL */
+.perfil h1 {
+    font-size: 1.45rem;
+    color: #fff;
+    margin-bottom: 6px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.perfil p {
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.75);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 22px;
+}
+
+/* LINKS */
+.contato {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.contato a {
+    text-decoration: none;
+    color: rgba(255,255,255,0.88);
+    font-size: 0.95rem;
+    padding: 10px 14px;
+    border-radius: 14px;
+
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+
+    transition: all .25s ease;
+}
+
+.contato a:hover {
+    background: rgba(255,255,255,0.08);
+    transform: translateX(6px);
+    box-shadow: 0 0 14px rgba(255,255,255,0.08);
+}
+
+/* FOOTER */
+footer {
+    margin-top: 22px;
+    text-align: center;
+    font-size: 0.68rem;
+    color: rgba(255,255,255,0.42);
+    letter-spacing: 1px;
+}
+
+
+
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-glass">
+        <header class="header">
+            <div class="header-title">
+                <h1>Sumário Financial</h1>
+                <p>Acompanhe suas atividades mensais</p>
+            </div>
+            <div class="header-controls">
+                <div class="tabs" id="time-tabs">
+                    <div class="tab" data-period="today">Hoje</div>
+                    <div class="tab active" data-period="month">Este mês</div>
+                </div>
+                <button class="btn-icon" onclick="alert('Date picker opened!')"><i class="fa-regular fa-calendar"></i> Data</button>
+                <button class="btn-icon circle" onclick="alert('Downloading report...')"><i class="fa-solid fa-download"></i></button>
+                <div class="user-balance">
+                    <img src="file:///C:/Users/alves/Desktop/workspace/my%20projects/meu%20porfolio/formal.png.png" alt="User">
+                    <span id="balance-amount">$156.834,42</span>
+                    <i class="fa-regular fa-eye" id="toggle-balance"></i>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-grid">
+            
+            <div class="col-left">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Análises</div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <span style="font-size: 0.8rem; background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 12px; cursor: pointer;">Despesas</span>
+                            <span style="font-size: 0.8rem; background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 12px; cursor: pointer;">Receitas</span>
+                        </div>
+                        <i class="fa-solid fa-arrow-up-right-from-square icon-top-right"></i>
+                    </div>
+                    <div class="analytics-labels">
+                        <div><span class="label-dot" style="background:#ff3b30;"></span>Vendas <span class="trend-up" id="trend-shop">↑ 12.2%</span><br><span id="val-shop">$3,312.00</span></div>
+                        <div><span class="label-dot" style="background:#34c759;"></span>Entretenimento <span class="trend-down" id="trend-ent">↓ 12.2%</span><br><span id="val-ent">$1,521.00</span></div>
+                        <div><span class="label-dot" style="background:#007aff;"></span>Utilidade <span style="color: var(--text-muted)">0.00</span><br><span id="val-util">$4,220.00</span></div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="analyticsChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="mini-cards-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Renda</div>
+                            <i class="fa-solid fa-arrow-up-right-from-square icon-top-right"></i>
+                        </div>
+                        <span class="trend-down">↓ -7.2% Lucro</span>
+                        <div class="value-large">$12,800.00</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Despesas</div>
+                            <i class="fa-solid fa-arrow-up-right-from-square icon-top-right"></i>
+                        </div>
+                        <span class="trend-up">↑ 12.2% Lucro</span>
+                        <div class="value-large">$16,800.00</div>
+                    </div>
+                </div>
+
+                <div class="bottom-widgets">
+                    <div class="widget">
+                        <div class="card-header" style="margin-bottom: 0;">
+                            <div class="card-title" style="font-size: 0.9rem;">Inscrever-se</div>
+                            <i class="fa-solid fa-arrow-up-right-from-square icon-top-right"></i>
+                        </div>
+                        <div style="font-size: 0.7rem; margin-top: 10px;"><span class="trend-up">↑ +2</span> Total</div>
+                        <div class="value-large" style="font-size: 1.5rem;">11</div>
+                    </div>
+                    <div class="widget">
+                        <div class="card-header" style="margin-bottom: 0;">
+                            <div class="card-title" style="font-size: 0.9rem;">Dicas de Economia</div>
+                            <i class="fa-solid fa-arrow-up-right-from-square icon-top-right"></i>
+                        </div>
+                        <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 10px;">Economize com suas assinaturas...</div>
+                        <div class="value-large" style="font-size: 1.5rem;">$120</div>
+                    </div>
+                    <div class="widget add-widget" onclick="alert('Abrindo menu de novos widgets...')">
+                        <i class="fa-solid fa-plus" style="font-size: 1.5rem; margin-bottom: 5px;"></i>
+                        <span style="font-size: 0.8rem;">Add widget</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-middle">
+                <div class="card" style="flex: 1;">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Gastos Totais</div>
+                            <div class="value-large" style="margin-top: 0;" id="total-spending-val">$16,896.22</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-weight: 600; font-size: 0.9rem; color: var(--accent-green);">+$1450.22</div>
+                            <div style="color: var(--text-muted); font-size: 0.8rem;">Esta semana</div>
+                        </div>
+                    </div>
+                    <div class="spending-chart-container">
+                        <canvas id="spendingChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Minhas economias</div>
+                        <i class="fa-solid fa-plus icon-top-right"></i>
+                    </div>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top:-10px;">Você tem 2 metas</p>
+                    
+                    <div class="savings-progress">
+                        <div class="progress-header">
+                            <span style="font-size: 1.2rem; font-weight: 600;">$8.2K <span style="font-size: 0.75rem; color:var(--text-muted); font-weight:normal; display:block;">Viagem</span></span>
+                            <span style="color: var(--accent-green);">80.2%</span>
+                        </div>
+                        <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 80.2%;"></div></div>
+                        <div style="text-align: right; font-size: 0.75rem; color: var(--text-muted); margin-top: -10px;">↑ Meta $10K</div>
+
+                        <div class="progress-header" style="margin-top: 1rem;">
+                            <span style="font-size: 1.2rem; font-weight: 600;">$10.2K <span style="font-size: 0.75rem; color:var(--text-muted); font-weight:normal; display:block;">Carro</span></span>
+                            <span style="color: var(--accent-green);">12.4%</span>
+                        </div>
+                        <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 12.4%;"></div></div>
+                        <div style="text-align: right; font-size: 0.75rem; color: var(--text-muted); margin-top: -10px;">↑ Meta $58K</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-right">
+                <div class="card" style="flex: 1;">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Transações Recentes</div>
+                            <div style="color: var(--text-muted); font-size: 0.8rem;">342 relatórios</div>
+                        </div>
+                        <i class="fa-solid fa-arrow-up-right-from-square icon-top-right"></i>
+                    </div>
+
+                    <div class="transaction-list">
+                        <div class="transaction-item">
+                            <div class="tx-info">
+                                <div class="tx-icon hp"><i class="fa-brands fa-hp"></i></div>
+                                <div class="tx-details"><h4>Dev-Domain (HP)</h4><p>HSBC • 24min ago</p></div>
+                            </div>
+                            <div class="tx-amount positive">$8000.00</div>
+                        </div>
+                        <div class="transaction-item">
+                            <div class="tx-info">
+                                <div class="tx-icon amazon"><i class="fa-brands fa-amazon"></i></div>
+                                <div class="tx-details"><h4>Amazon.com, Inc.</h4><p>HSBC • Apple pay • 1h ago</p></div>
+                            </div>
+                            <div class="tx-amount">$102.24</div>
+                        </div>
+                        <div class="transaction-item">
+                            <div class="tx-info">
+                                <div class="tx-icon dribbble"><i class="fa-brands fa-dribbble"></i></div>
+                                <div class="tx-details"><h4>Dribbble Co</h4><p>Revolut • POS • Yesterday</p></div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div class="tx-amount">$60.49</div>
+                                <div style="font-size: 0.7rem; color: var(--accent-red);">DECLINED</div>
+                            </div>
+                        </div>
+                         <div class="transaction-item">
+                            <div class="tx-info">
+                                <div class="tx-icon" style="background:#555;"><i class="fa-solid fa-mug-hot"></i></div>
+                                <div class="tx-details"><h4>Costa coffee</h4><p>BOV • Apple pay</p></div>
+                            </div>
+                            <div class="tx-amount">$3.80</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Minhas Contas</div>
+                        <i class="fa-solid fa-plus icon-top-right"></i>
+                    </div>
+                    
+                    <div class="credit-cards">
+                        <div class="cc">
+                            <span>**** 8892</span>
+                            <i class="fa-brands fa-cc-mastercard" style="font-size: 1.5rem; color: #ff5f00;"></i>
+                        </div>
+                        <div class="cc">
+                            <span>**** 7712</span>
+                            <i class="fa-brands fa-cc-visa" style="font-size: 1.5rem;"></i>
+                        </div>
+                        <div class="cc-green">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>**** 2241</span>
+                                <i class="fa-brands fa-cc-visa" style="font-size: 1.5rem;"></i>
+                            </div>
+                            <div class="cc-bottom">
+                                <span>$ 16,800.00</span>
+                                <span>04/25</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+        <diva class="rodape">
+            <div class="perfil">
+                <h1>Heitor Alves</h1>
+                <p>FRONT-END WEB DEVELOPER</p>
+            </div>
+
+            <diva class="contato">
+                <br>
+                <a href="https://github.com/heitorjavascript-debug" target="_blank">GitHub</a>
+                <a href="https://www.linkedin.com/in/heitor-alves-3b8380401/" target="_blank">LinkedIn</a>
+                <a href="https://www.instagram.com/hjs.dev/" target="_blank">Instagram</a>
+                <a href="https://heitorjavascript-debug.github.io/meuportfolio/" target="_blank">Portfólio</a>
+            </div>
+
+            <footer>© Desenvolvido por : Heitor Alves - Web Developer</footer>
+
+        </div>
+            
+        
+
+
+    <script>
+        // 1. Mostrar/Ocultar Saldo (Ícone do Olho)
+        const eyeIcon = document.getElementById('toggle-balance');
+        const balanceSpan = document.getElementById('balance-amount');
+        let isBalanceVisible = true;
+        const originalBalance = balanceSpan.innerText;
+
+        eyeIcon.addEventListener('click', () => {
+            isBalanceVisible = !isBalanceVisible;
+            if (isBalanceVisible) {
+                balanceSpan.innerText = originalBalance;
+                eyeIcon.classList.remove('fa-eye-slash');
+                eyeIcon.classList.add('fa-eye');
+            } else {
+                balanceSpan.innerText = '••••••••';
+                eyeIcon.classList.remove('fa-eye');
+                eyeIcon.classList.add('fa-eye-slash');
+            }
+        });
+
+        // 2. Configuração dos Gráficos Chart.js
+        Chart.defaults.color = '#8e8e93';
+        Chart.defaults.font.family = 'Inter';
+
+        const ctxAnalytics = document.getElementById('analyticsChart').getContext('2d');
+        const gradientGreen = ctxAnalytics.createLinearGradient(0, 0, 0, 200);
+        gradientGreen.addColorStop(0, 'rgba(154, 205, 50, 0.4)');
+        gradientGreen.addColorStop(1, 'rgba(154, 205, 50, 0.0)');
+
+        let analyticsChart = new Chart(ctxAnalytics, {
+            type: 'line',
+            data: {
+                labels: ['24 Apr', '', '', '18 Mr', '', '', '24 Ma'],
+                datasets: [
+                    {
+                        label: 'Shopping',
+                        data: [2000, 3000, 1500, 3844, 2000, 1000, 4000],
+                        borderColor: '#9acd32', backgroundColor: gradientGreen,
+                        borderWidth: 2, tension: 0.4, fill: true,
+                        pointBackgroundColor: '#fff', pointBorderColor: '#9acd32', pointRadius: 0, pointHoverRadius: 6
+                    },
+                    {
+                        label: 'Other',
+                        data: [1500, 2000, 3000, 1500, 2500, 3500, 2000],
+                        borderColor: '#555', borderWidth: 2, tension: 0.4, fill: false, pointRadius: 0
+                    }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+                scales: {
+                    x: { grid: { display: false, drawBorder: false } },
+                    y: { grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false }, ticks: { callback: v => v/1000 + 'k' } }
+                }
+            }
+        });
+
+        const ctxSpending = document.getElementById('spendingChart').getContext('2d');
+        let spendingChart = new Chart(ctxSpending, {
+            type: 'bar',
+            data: {
+                labels: ['☕︎', '🏠︎', '⚡︎', '✦︎', '⏲', '✈︎', '𓎩', '⛟'],
+                datasets: [{
+                    data: [8800, 6323, 4322, 2670, 1628, 1622, 1404, 642],
+                    backgroundColor: ['#555', '#555', '#555', '#9acd32', '#555', '#555', '#555', '#555'],
+                    borderRadius: 8, barPercentage: 0.6
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { x: { grid: { display: false, drawBorder: false } }, y: { display: false } }
+            }
+        });
+
+        // 3. Sistema de Abas (Tabs) para atualizar dados simulados
+        const tabs = document.querySelectorAll('.tab');
+        const dataMonth = {
+            shopping: [2000, 3000, 1500, 3844, 2000, 1000, 4000],
+            other: [1500, 2000, 3000, 1500, 2500, 3500, 2000],
+            bars: [8800, 6323, 4322, 2670, 1628, 1622, 1404, 642],
+            total: '$16,896.22'
+        };
+        const dataToday = {
+            shopping: [50, 120, 80, 250, 90, 300, 150],
+            other: [20, 50, 100, 40, 80, 60, 120],
+            bars: [250, 120, 80, 300, 50, 0, 90, 45],
+            total: '$935.00'
+        };
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove classe ativa de todas
+                tabs.forEach(t => t.classList.remove('active'));
+                // Adiciona na clicada
+                tab.classList.add('active');
+                
+                // Simula a mudança de dados dependendo da aba
+                const period = tab.getAttribute('data-period');
+                const newData = period === 'today' ? dataToday : dataMonth;
+
+                // Atualiza Gráfico de Linha
+                analyticsChart.data.datasets[0].data = newData.shopping;
+                analyticsChart.data.datasets[1].data = newData.other;
+                analyticsChart.update();
+
+                // Atualiza Gráfico de Barras
+                spendingChart.data.datasets[0].data = newData.bars;
+                spendingChart.update();
+
+                // Atualiza Total Spending text
+                document.getElementById('total-spending-val').innerText = newData.total;
+            });
+        });
+
+
+            const card = document.querySelector('.rodape');
+
+let isDragging = false;
+let offsetX = 0;
+let offsetY = 0;
+
+function startDrag(x, y) {
+    isDragging = true;
+
+    const rect = card.getBoundingClientRect();
+
+    offsetX = x - rect.left;
+    offsetY = y - rect.top;
+
+    card.style.transition = "none";
+}
+
+function drag(x, y) {
+    if (!isDragging) return;
+
+    card.style.left = `${x - offsetX}px`;
+    card.style.top = `${y - offsetY}px`;
+    card.style.right = "auto";
+    card.style.bottom = "auto";
+    card.style.transform = "none";
+}
+
+function stopDrag() {
+    isDragging = false;
+    card.style.transition = "box-shadow .25s ease";
+}
+
+/* MOUSE */
+card.addEventListener('mousedown', (e) => {
+    startDrag(e.clientX, e.clientY);
+});
+
+document.addEventListener('mousemove', (e) => {
+    drag(e.clientX, e.clientY);
+});
+
+document.addEventListener('mouseup', stopDrag);
+
+/* TOUCH */
+card.addEventListener('touchstart', (e) => {
+    const touch = e.touches[0];
+    startDrag(touch.clientX, touch.clientY);
+});
+
+document.addEventListener('touchmove', (e) => {
+    const touch = e.touches[0];
+    drag(touch.clientX, touch.clientY);
+});
+
+document.addEventListener('touchend', stopDrag);
+
+
+    </script>
+</body>
+</html>
